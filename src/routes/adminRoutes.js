@@ -130,28 +130,43 @@ router.post(
 );
 
 router.get(
-  ["/Admin/Messages", "/Admin/Message"],
+  ["/Admin/Messages", "/Admin/Message", "/admin/messages", "/admin/message"],
   authenticate,
   requireAdmin,
   listAdminThreads
 );
 
 router.get(
-  ["/Admin/Messages/:threadId", "/Admin/Message/:threadId"],
+  [
+    "/Admin/Messages/:threadId",
+    "/Admin/Message/:threadId",
+    "/admin/messages/:threadId",
+    "/admin/message/:threadId",
+  ],
   authenticate,
   requireAdmin,
   getAdminThread
 );
 
 router.post(
-  ["/Admin/Messages/:threadId/Reply", "/Admin/Message/:threadId/Reply"],
+  [
+    "/Admin/Messages/:threadId/Reply",
+    "/Admin/Message/:threadId/Reply",
+    "/admin/messages/:threadId/reply",
+    "/admin/message/:threadId/reply",
+  ],
   authenticate,
   requireAdmin,
   replyAdminThread
 );
 
 router.patch(
-  ["/Admin/Messages/:threadId", "/Admin/Message/:threadId"],
+  [
+    "/Admin/Messages/:threadId",
+    "/Admin/Message/:threadId",
+    "/admin/messages/:threadId",
+    "/admin/message/:threadId",
+  ],
   authenticate,
   requireAdmin,
   updateAdminThreadStatus
