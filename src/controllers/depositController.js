@@ -68,13 +68,14 @@ export const createDeposit = asyncHandler(async (req, res) => {
     }
   }
 
+  const currency = req.body.currency || req.user?.currencyCode || "USD";
   const walletAddress = generateWalletAddress(method);
 
   const transaction = await Transaction.create({
     user: req.user._id,
     type: "Deposit",
     amount,
-    currency: "USD",
+    currency,
     paymentMethod: method.currencyCode,
     status: "Pending",
     walletAddress,
@@ -85,7 +86,7 @@ export const createDeposit = asyncHandler(async (req, res) => {
   const deposit = await Deposit.create({
     user: req.user._id,
     amount,
-    currency: "USD",
+    currency,
     paymentMethod: method.id,
     walletAddress,
     network: method.network,

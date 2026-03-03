@@ -6,11 +6,27 @@ import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
+const escapeRegExp = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const allowedOrigins = env.CORS_ORIGINS.map((origin) => {
+  if (!origin.includes("*")) {
+    return { raw: origin, regex: null };
+  }
+
+  const pattern = `^${escapeRegExp(origin).replace(/\\\*/g, ".*")}$`;
+  return { raw: origin, regex: new RegExp(pattern) };
+});
+
+const isOriginAllowed = (origin = "") =>
+  allowedOrigins.some((entry) =>
+    entry.regex ? entry.regex.test(origin) : entry.raw === origin
+  );
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || env.CORS_ORIGINS.includes(origin)) {
+      if (!origin || isOriginAllowed(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`CORS blocked for origin: ${origin}`));

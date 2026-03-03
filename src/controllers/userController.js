@@ -13,6 +13,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const sumAmounts = (items) =>
   items.reduce((total, item) => total + (Number(item.amount) || 0), 0);
 
+const sumNumbers = (items, selector) =>
+  items.reduce((total, item) => total + (Number(selector(item)) || 0), 0);
+
 export const getDashboard = asyncHandler(async (req, res) => {
   const user = req.user;
 
@@ -44,6 +47,51 @@ export const getDashboard = asyncHandler(async (req, res) => {
   const completedWithdrawals = withdrawals.filter(
     (withdrawal) => withdrawal.status === "Completed"
   );
+  const activeTrades = trades.filter((trade) => trade.status === "Active");
+  const activePlaceTrades = placeTrades.filter(
+    (trade) => trade.status === "Active"
+  );
+  const activeCopyTrades = copyTrades.filter((trade) =>
+    ["Active", "Paused"].includes(trade.status)
+  );
+  const completedTrades = trades.filter((trade) => trade.status === "Completed");
+  const completedPlaceTrades = placeTrades.filter(
+    (trade) => trade.status === "Completed"
+  );
+  const completedCopyTrades = copyTrades.filter(
+    (trade) => trade.status === "Completed"
+  );
+  const completedStakes = stakes.filter((stake) => stake.status === "Completed");
+
+  const realizedTradePnl =
+    sumNumbers(completedTrades, (trade) => trade.profitLoss) +
+    sumNumbers(completedPlaceTrades, (trade) => trade.profitLoss);
+  const copyTradeRevenue = sumNumbers(
+    completedCopyTrades,
+    (trade) => (Number(trade.amount) || 0) * ((Number(trade.performance) || 0) / 100)
+  );
+  const stakeRevenue = sumNumbers(completedStakes, (stake) => {
+    const payout = Number(stake.payoutUsd) || 0;
+    const principal = Number(stake.principalUsd) || 0;
+    if (payout > 0) return Math.max(0, payout - principal);
+    return Number(stake.rewardUsdTotal) || 0;
+  });
+  const miningRevenue = sumNumbers(miningRuns, (run) => run.rewardBalance);
+  const grossRevenue = realizedTradePnl + copyTradeRevenue + stakeRevenue + miningRevenue;
+
+  const completedTradingPool = [...completedTrades, ...completedPlaceTrades];
+  const totalCompletedTrades = completedTradingPool.length;
+  const totalWinningTrades = completedTradingPool.filter((trade) => {
+    if (`${trade.result || ""}`.toLowerCase() === "win") return true;
+    return (Number(trade.profitLoss) || 0) > 0;
+  }).length;
+  const winRate =
+    totalCompletedTrades > 0 ? (totalWinningTrades / totalCompletedTrades) * 100 : 0;
+
+  const totalDeposits = sumAmounts(completedDeposits);
+  const totalWithdrawals = sumAmounts(completedWithdrawals);
+  const netCashflow = totalDeposits - totalWithdrawals;
+  const roiPercent = totalDeposits > 0 ? (grossRevenue / totalDeposits) * 100 : 0;
 
   const data = {
     balance: user.balance,
@@ -52,6 +100,8 @@ export const getDashboard = asyncHandler(async (req, res) => {
     email: user.email,
     phoneNumber: user.phoneNumber,
     country: user.country,
+    currencyCode: user.currencyCode,
+    currencySymbol: user.currencySymbol,
     photoURL: user.photoURL,
     subscriptionPlan: user.subscriptionPlan,
     kycVerified: user.kycVerified,
@@ -59,8 +109,8 @@ export const getDashboard = asyncHandler(async (req, res) => {
     role: user.role,
     status: user.status,
     stats: {
-      totalDeposits: sumAmounts(completedDeposits),
-      totalWithdrawals: sumAmounts(completedWithdrawals),
+      totalDeposits,
+      totalWithdrawals,
       depositCount: deposits.length,
       withdrawalCount: withdrawals.length,
       tradeCount: trades.length,
@@ -70,6 +120,23 @@ export const getDashboard = asyncHandler(async (req, res) => {
       miningCount: miningRuns.length,
       stakeCount: stakes.length,
       botCount: bots.length,
+    },
+    revenue: {
+      grossRevenue,
+      realizedTradePnl,
+      copyTradeRevenue,
+      stakeRevenue,
+      miningRevenue,
+      activeTrades:
+        activeTrades.length + activePlaceTrades.length + activeCopyTrades.length,
+      activeSpotTrades: activeTrades.length,
+      activePlaceTrades: activePlaceTrades.length,
+      activeCopyTrades: activeCopyTrades.length,
+      totalWinningTrades,
+      totalCompletedTrades,
+      winRate,
+      netCashflow,
+      roiPercent,
     },
   };
 

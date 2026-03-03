@@ -4,7 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createWithdrawal = asyncHandler(async (req, res) => {
   const amount = Number(req.body.amount);
-  const currency = req.body.currency || "USD";
+  const currency = req.body.currency || req.user?.currencyCode || "USD";
   const paymentMethod = req.body.paymentMethod;
   const details = req.body.details || "";
   const destination = req.body.destination || {};

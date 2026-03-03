@@ -35,6 +35,33 @@ export const authenticate = asyncHandler(async (req, res, next) => {
   }
 });
 
+export const optionalAuthenticate = asyncHandler(async (req, res, next) => {
+  const token = extractToken(req);
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const payload = jwt.verify(token, env.JWT_SECRET);
+    const userId = payload.sub || payload.userId || payload.uid;
+    if (!userId) {
+      return next();
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return next();
+    }
+
+    req.user = user;
+    req.userId = userId;
+  } catch (error) {
+    // Ignore invalid/expired tokens for optional auth routes.
+  }
+
+  return next();
+});
+
 export const requireAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ success: false, message: "Unauthorized" });

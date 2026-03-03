@@ -72,7 +72,7 @@ export const completeTrade = asyncHandler(async (req, res) => {
     user: req.user._id,
     type: "Trade",
     amount: Math.abs(delta),
-    currency: "USD",
+    currency: req.user?.currencyCode || "USD",
     paymentMethod: "Trade",
     status: "Completed",
     details: `Trade ${trade._id.toString()} ${trade.result}`,

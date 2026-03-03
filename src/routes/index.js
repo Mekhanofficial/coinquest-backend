@@ -17,6 +17,9 @@ import buyBotRoutes from "./buyBotRoutes.js";
 import referralRoutes from "./referralRoutes.js";
 import adminRoutes from "./adminRoutes.js";
 import paymentProofRoutes from "./paymentProofRoutes.js";
+import chatRoutes from "./chatRoutes.js";
+import marketRoutes from "./marketRoutes.js";
+import messageRoutes from "./messageRoutes.js";
 
 const router = Router();
 
@@ -38,5 +41,8 @@ router.use(buyBotRoutes);
 router.use(referralRoutes);
 router.use(paymentProofRoutes);
 router.use(adminRoutes);
+router.use(chatRoutes);
+router.use(marketRoutes);
+router.use(messageRoutes);
 
 export default router;
