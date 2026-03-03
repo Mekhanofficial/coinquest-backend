@@ -35,4 +35,6 @@ export const env = {
   RESET_TOKEN_TTL_MINUTES: process.env.RESET_TOKEN_TTL_MINUTES
     ? Number(process.env.RESET_TOKEN_TTL_MINUTES)
     : 60,
+  COINGECKO_API_KEY: process.env.COINGECKO_API_KEY || "",
+  COINGECKO_PRO_API_KEY: process.env.COINGECKO_PRO_API_KEY || "",
 };
